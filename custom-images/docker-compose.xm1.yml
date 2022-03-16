@@ -35,7 +35,9 @@ services:
     image: ${SITECORE_DOCKER_REGISTRY}nonproduction/mssql-developer:2017-${SITECORE_VERSION}
     environment:
       SA_PASSWORD: ${SQL_SA_PASSWORD}
+      SITECORE_ADMIN_PASSWORD: ${SITECORE_ADMIN_PASSWORD}
       ACCEPT_EULA: "Y"
+      SQL_SERVER: mssql
     ports:
       - "14330:1433"
     volumes:
@@ -171,3 +173,21 @@ services:
       - "traefik.http.routers.cm-secure.rule=Host(`${CM_HOST}`)"
       - "traefik.http.routers.cm-secure.tls=true"
       - "traefik.http.routers.cm-secure.middlewares=force-STS-Header"
+
+  coveo-init:
+    isolation: ${ISOLATION}
+    image: ${REGISTRY}${COMPOSE_PROJECT_NAME}-coveo-init:${COVEO_VERSION}-${SITECORE_VERSION}
+    environment:
+      COVEO_API_KEY: ${COVEO_API_KEY}
+      COVEO_SEARCH_API_KEY: ${COVEO_SEARCH_API_KEY}
+      COVEO_ORG_ID: ${COVEO_ORG_ID}
+      COVEO_USER: sitecore\${COVEO_USER}
+      COVEO_PASSWORD: ${COVEO_PASSWORD}
+      COVEO_HOST: cm
+      SITECORE_ADMIN_USER: sitecore\${SITECORE_ADMIN_USER}
+      SITECORE_ADMIN_PASSWORD: ${SITECORE_ADMIN_PASSWORD}
+    depends_on:
+      cm:
+        condition: service_healthy
+      mssql:
+        condition: service_healthy

@@ -20,6 +20,16 @@ services:
         condition: service_healthy
 
   mssql:
+    image: ${REGISTRY}${COMPOSE_PROJECT_NAME}-xp0-mssql:${VERSION:-latest}
+    build:
+      context: ./docker/build/mssql
+      args:
+        BASE_IMAGE: ${SITECORE_DOCKER_REGISTRY}sitecore-xp0-mssql:10.1-ltsc2019 # No buildable 10.2 version tags yet.
+        SPE_IMAGE: ${SITECORE_MODULE_REGISTRY}sitecore-spe-assets:${SPE_VERSION}
+        SXA_IMAGE: ${SITECORE_MODULE_REGISTRY}sitecore-sxa-xp1-assets:${SXA_VERSION}
+        HORIZON_RESOURCES_IMAGE: ${SITECORE_MODULE_REGISTRY}horizon-integration-xp0-assets:${HORIZON_ASSET_VERSION}
+        COVEO_ASSET: ${REGISTRY}custom-coveo${COVEO_VERSION}-assets:10.1.0-1809 # No buildable 10.2 version tags yet.
+        COVEO_SXA_ASSET: ${REGISTRY}custom-coveo${COVEO_VERSION}-sxa-assets:10.1.0-1809 # No buildable 10.2 version tags yet.
     mem_limit: 2GB
     volumes:
       - ${LOCAL_DATA_PATH}\mssql:c:\data
@@ -65,6 +75,8 @@ services:
         TOOLING_IMAGE: ${SITECORE_TOOLS_REGISTRY}sitecore-docker-tools-assets:${TOOLS_VERSION}
         SOLUTION_IMAGE: ${REGISTRY}${COMPOSE_PROJECT_NAME}-solution:${VERSION:-latest}
         HORIZON_RESOURCES_IMAGE: ${SITECORE_MODULE_REGISTRY}horizon-integration-xp0-assets:${HORIZON_ASSET_VERSION}
+        COVEO_ASSET: ${REGISTRY}custom-coveo${COVEO_VERSION}-assets:10.1.0-1809 # No buildable 10.2 version tags yet.
+        COVEO_SXA_ASSET: ${REGISTRY}custom-coveo${COVEO_VERSION}-sxa-assets:10.1.0-1809 # No buildable 10.2 version tags yet.
     depends_on:
       - solution
     volumes:
@@ -151,3 +163,10 @@ services:
       - "traefik.http.routers.sh-secure.tls=true"
       - "traefik.http.routers.sh-secure.middlewares=force-STS-Header"
       - "traefik.http.services.sh.loadbalancer.server.port=80"
+
+  coveo-init:
+   image: ${REGISTRY}${COMPOSE_PROJECT_NAME}-coveo-init:${VERSION:-latest}
+   build:
+     context: ./docker/build/coveo-init
+     args:
+      BASE_IMAGE: mcr.microsoft.com/powershell:nanoserver-1809

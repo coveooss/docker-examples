@@ -27,6 +27,14 @@ services:
         BASE_IMAGE: ${SITECORE_DOCKER_REGISTRY}sitecore-redis:${SITECORE_VERSION}
 
   mssql:
+    image: ${REGISTRY}${COMPOSE_PROJECT_NAME}-xm1-mssql:${VERSION:-latest}
+    build:
+      context: ./docker/build/mssql
+      args:
+        BASE_IMAGE: ${SITECORE_DOCKER_REGISTRY}sitecore-xm1-mssql:10.1-ltsc2019 # No buildable 10.2 version tags yet.
+        SPE_IMAGE: ${SITECORE_MODULE_REGISTRY}sitecore-spe-assets:${SPE_VERSION}
+        COVEO_ASSET: ${REGISTRY}custom-coveo${COVEO_VERSION}-assets:10.1.0-1809 # No buildable 10.2 version tags yet.
+        COVEO_SXA_ASSET: ${REGISTRY}custom-coveo${COVEO_VERSION}-sxa-assets:10.1.0-1809 # No buildable 10.2 version tags yet.
     mem_limit: 2GB
     volumes:
       - ${LOCAL_DATA_PATH}\mssql:c:\data
@@ -71,11 +79,16 @@ services:
         SXA_IMAGE: ${SITECORE_MODULE_REGISTRY}sitecore-sxa-xm1-assets:${SXA_VERSION}
         TOOLING_IMAGE: ${SITECORE_TOOLS_REGISTRY}sitecore-docker-tools-assets:${TOOLS_VERSION}
         SOLUTION_IMAGE: ${REGISTRY}${COMPOSE_PROJECT_NAME}-solution:${VERSION:-latest}
+        COVEO_ASSET: ${REGISTRY}custom-coveo${COVEO_VERSION}-assets:10.1.0-1809 # No buildable 10.2 version tags yet.
+        COVEO_SXA_ASSET: ${REGISTRY}custom-coveo${COVEO_VERSION}-sxa-assets:10.1.0-1809 # No buildable 10.2 version tags yet.
     depends_on:
       - solution
+      - cm
     volumes:
       - ${LOCAL_DEPLOY_PATH}\website:C:\deploy
       - ${LOCAL_DATA_PATH}\cd:C:\inetpub\wwwroot\App_Data\logs
+      - ${LOCAL_DATA_PATH}\coveo-config:C:\inetpub\wwwroot\App_Config\Include\Coveo
+      - ${LOCAL_DATA_PATH}\coveo-modules:C:\inetpub\wwwroot\App_Config\Modules\Coveo
     environment:
       SITECORE_DEVELOPMENT_PATCHES: CustomErrorsOff
     entrypoint: powershell -Command "& C:\tools\entrypoints\iis\Development.ps1"
@@ -91,11 +104,15 @@ services:
         TOOLING_IMAGE: ${SITECORE_TOOLS_REGISTRY}sitecore-docker-tools-assets:${TOOLS_VERSION}
         HORIZON_RESOURCES_IMAGE: ${SITECORE_MODULE_REGISTRY}horizon-integration-xm1-assets:${HORIZON_ASSET_VERSION}
         SOLUTION_IMAGE: ${REGISTRY}${COMPOSE_PROJECT_NAME}-solution:${VERSION:-latest}
+        COVEO_ASSET: ${REGISTRY}custom-coveo${COVEO_VERSION}-assets:10.1.0-1809 # No buildable 10.2 version tags yet.
+        COVEO_SXA_ASSET: ${REGISTRY}custom-coveo${COVEO_VERSION}-sxa-assets:10.1.0-1809 # No buildable 10.2 version tags yet.
     depends_on:
       - solution
     volumes:
       - ${LOCAL_DEPLOY_PATH}\website:C:\deploy
       - ${LOCAL_DATA_PATH}\cm:C:\inetpub\wwwroot\App_Data\logs
+      - ${LOCAL_DATA_PATH}\coveo-config:C:\inetpub\wwwroot\App_Config\Include\Coveo 
+      - ${LOCAL_DATA_PATH}\coveo-modules:C:\inetpub\wwwroot\App_Config\Modules\Coveo 
     environment:
       SITECORE_DEVELOPMENT_PATCHES: CustomErrorsOff
       Sitecore_Horizon_ClientHost: https://${HRZ_HOST}
@@ -134,3 +151,9 @@ services:
       - "traefik.http.routers.sh-secure.middlewares=force-STS-Header"
       - "traefik.http.services.sh.loadbalancer.server.port=80"
   
+  coveo-init:
+    image: ${REGISTRY}${COMPOSE_PROJECT_NAME}-coveo-init:${VERSION:-latest}
+    build:
+      context: ./docker/build/coveo-init
+      args:
+        BASE_IMAGE: mcr.microsoft.com/powershell:nanoserver-1809

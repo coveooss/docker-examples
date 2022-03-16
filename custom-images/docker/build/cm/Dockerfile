@@ -6,11 +6,15 @@ ARG SPE_IMAGE
 ARG TOOLING_IMAGE
 ARG SOLUTION_IMAGE
 ARG HORIZON_RESOURCES_IMAGE
+ARG COVEO_ASSET
+ARG COVEO_SXA_ASSET
 
 FROM ${SOLUTION_IMAGE} as solution
 FROM ${TOOLING_IMAGE} as tooling
 FROM ${SPE_IMAGE} as spe
 FROM ${SXA_IMAGE} as sxa
+FROM ${COVEO_ASSET} as coveo
+FROM ${COVEO_SXA_ASSET} as coveosxa
 FROM ${HORIZON_RESOURCES_IMAGE} as horizon_resources
 FROM ${BASE_IMAGE}
 
@@ -25,9 +29,16 @@ WORKDIR C:\inetpub\wwwroot
 # Add SPE module
 COPY --from=spe \module\cm\content .\
 
+# Add Coveo module
+COPY --from=coveo \module\cm\content .\
+
+# Add Coveo SXA module
+COPY --from=coveosxa \module\cm\content .\
+
 # Add SXA module
 COPY --from=sxa \module\cm\content .\
 COPY --from=sxa \module\tools \module\tools
+
 RUN C:\module\tools\Initialize-Content.ps1 -TargetPath .\; `
     Remove-Item -Path C:\module -Recurse -Force;
 
