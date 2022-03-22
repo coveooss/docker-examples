@@ -1,3 +1,6 @@
+# coveo
+!/docker/build/coveo-init/cfsc.ps1
+
 # folders
 .git
 .gitignore

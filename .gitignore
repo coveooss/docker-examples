@@ -29,4 +29,11 @@ _ReSharper*/
 [Tt]est[Rr]esult*
 .vs/
 .vscode/
+.idea/
 packages/
+
+# Coveo
+Coveo*.config
+Coveo*.example
+COveo*.disabled
+Coveo*.json
